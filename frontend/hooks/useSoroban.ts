@@ -32,17 +32,15 @@ export const useSoroban = () => {
         new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org").loadAccount(address)
       );
       
-      // Implementing a REAL, fully functional DEX swap using PathPaymentStrictSend.
-      // This will attempt to natively swap XLM for LQID on the Stellar DEX.
       const lqidAsset = new StellarSdk.Asset("LQID", "GCDAND5QSCVFFEDUCK62VEZASVPYOUATCMJ4EXAUVEOUPILOJDDEFUTZ");
       
       const op = StellarSdk.Operation.pathPaymentStrictSend({
         sendAsset: StellarSdk.Asset.native(),
         sendAmount: amount.toString(),
         destAsset: lqidAsset,
-        destMin: "0.0000001", // SDK requires a strictly positive number (1 stroop minimum)
+        destMin: "0.0000001",
         destination: address,
-        path: [], // Empty path lets Horizon find the direct market if it exists
+        path: [],
       });
 
       const tx = new StellarSdk.TransactionBuilder(account, {
@@ -54,15 +52,22 @@ export const useSoroban = () => {
         .build();
 
       console.log("useSoroban: Requesting signature...");
-      const signedXdr = await signTransaction(tx.toXDR(), { network: "TESTNET" });
-      console.log("useSoroban: Transaction signed!");
+      // Freighter v2+ requires networkPassphrase and returns an object
+      const result = await signTransaction(tx.toXDR(), { 
+        networkPassphrase: StellarSdk.Networks.TESTNET 
+      });
+      
+      const signedXdr = typeof result === 'string' ? result : (result as any).signedTxXdr;
+      console.log("useSoroban: Transaction signed!", !!signedXdr);
+
+      if (!signedXdr) throw new Error("User rejected signature or signing failed.");
       
       const horizon = new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org");
       const submission = await horizon.submitTransaction(StellarSdk.TransactionBuilder.fromXDR(signedXdr, networkPassphrase) as any);
-      console.log("useSoroban: Submission status:", submission.successful);
+      console.log("useSoroban: Submission successful:", submission.successful);
       
       if (!submission.successful) {
-        throw new Error(`Transaction failed: ${JSON.stringify(submission)}`);
+        throw new Error(`Transaction failed: ${submission.hash}`);
       }
 
       return { success: true, txHash: submission.hash };
@@ -70,7 +75,6 @@ export const useSoroban = () => {
       console.error("useSoroban: CRITICAL ERROR:", err);
       let errorMsg = err.message || "Swap failed";
       
-      // If it's a Horizon BadResponseError, extract the exact reason
       if (err.response && err.response.data && err.response.data.extras) {
         const codes = err.response.data.extras.result_codes;
         if (codes) {

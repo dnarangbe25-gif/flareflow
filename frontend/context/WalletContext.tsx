@@ -19,54 +19,64 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const connect = useCallback(async () => {
-    console.log("WalletContext V3: Connect Clicked");
+    console.log("WalletContext V4: Connect Clicked");
     setIsConnecting(true);
     setError(null);
     
     try {
-      // Direct access to window.freighter is often most reliable for debugging
-      const freighter = (window as any).freighter;
-      console.log("WalletContext V3: window.freighter available:", !!freighter);
+      // 1. Check if connected
+      const connectedRes = await (Freighter as any).isConnected();
+      const isConnected = typeof connectedRes === 'boolean' ? connectedRes : connectedRes?.isConnected;
+      console.log("WalletContext V4: isConnected:", isConnected);
 
-      let pk = "";
-
-      // 1. Try modern requestAccess
-      console.log("WalletContext V3: Calling Freighter.requestAccess()...");
-      try {
-        const result = await Freighter.requestAccess();
-        console.log("WalletContext V3: requestAccess result:", result);
-        if (Array.isArray(result)) pk = result[0];
-        else if (typeof result === "string") pk = result;
-      } catch (e) {
-        console.warn("WalletContext V3: requestAccess failed:", e);
+      if (!isConnected) {
+        throw new Error("Freighter not detected. Please install and unlock the extension.");
       }
 
-      // 2. Fallback to getPublicKey
+      // 2. Try requestAccess (New API returns { address: string })
+      console.log("WalletContext V4: Calling requestAccess...");
+      let pk = "";
+      try {
+        const res = await Freighter.requestAccess();
+        console.log("WalletContext V4: requestAccess raw result:", res);
+        if (typeof res === 'string') pk = res;
+        else if (res && (res as any).address) pk = (res as any).address;
+      } catch (e) {
+        console.warn("WalletContext V4: requestAccess failed", e);
+      }
+
+      // 3. Try getAddress (New API returns { address: string })
       if (!pk) {
-        console.log("WalletContext V3: Calling Freighter.getPublicKey()...");
+        console.log("WalletContext V4: Calling getAddress...");
         try {
-          pk = await Freighter.getPublicKey();
-          console.log("WalletContext V3: getPublicKey result:", pk);
+          const res = await Freighter.getAddress();
+          console.log("WalletContext V4: getAddress raw result:", res);
+          if (typeof res === 'string') pk = res;
+          else if (res && (res as any).address) pk = (res as any).address;
         } catch (e) {
-          console.warn("WalletContext V3: getPublicKey failed:", e);
+          console.warn("WalletContext V4: getAddress failed", e);
         }
       }
 
-      // 3. Fallback to direct window.freighter
-      if (!pk && freighter && freighter.getPublicKey) {
-        console.log("WalletContext V3: Calling window.freighter.getPublicKey()...");
-        pk = await freighter.getPublicKey();
-        console.log("WalletContext V3: window.freighter result:", pk);
+      // 4. Final Fallback: Direct window object (Old API)
+      if (!pk) {
+        const f = (window as any).freighter;
+        if (f && f.getPublicKey) {
+          console.log("WalletContext V4: Calling window.freighter.getPublicKey...");
+          pk = await f.getPublicKey();
+        }
       }
 
+      console.log("WalletContext V4: Resolved PK:", pk);
+
       if (pk && pk.length === 56 && pk.startsWith("G")) {
-        console.log("WalletContext V3: Success setting address:", pk);
         setAddress(pk);
+        console.log("WalletContext V4: SUCCESS");
       } else {
-        throw new Error("Could not retrieve a valid Stellar address. Please ensure Freighter is unlocked and authorized.");
+        throw new Error("No public key shared. Please unlock Freighter and approve the request.");
       }
     } catch (err: any) {
-      console.error("WalletContext V3: Final Error:", err);
+      console.error("WalletContext V4: Error:", err);
       const msg = err.message || "Connection failed";
       setError(msg);
       alert("SOROBANFLOW ERROR: " + msg);
@@ -78,8 +88,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const auto = async () => {
       try {
-        if (await Freighter.isConnected()) {
-          const pk = await Freighter.getPublicKey();
+        const connectedRes = await (Freighter as any).isConnected();
+        const isConnected = typeof connectedRes === 'boolean' ? connectedRes : connectedRes?.isConnected;
+        if (isConnected) {
+          const res = await Freighter.getAddress();
+          const pk = typeof res === 'string' ? res : (res as any).address;
           if (pk && pk.length === 56) setAddress(pk);
         }
       } catch (e) {}
