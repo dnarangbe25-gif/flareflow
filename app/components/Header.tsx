@@ -31,7 +31,7 @@ export default function Header() {
         {/* Left Side: Logo */}
         <div className="flex items-center">
           <h1 className="text-xl font-bold tracking-tight text-black">
-            SOROBANFLOW
+            SOROBANFLOW V3
           </h1>
         </div>
 
