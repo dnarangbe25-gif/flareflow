@@ -79,7 +79,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       console.error("WalletContext V4: Error:", err);
       const msg = err.message || "Connection failed";
       setError(msg);
-      alert("SOROBANFLOW ERROR: " + msg);
+      alert("FLARE FLOW ERROR: " + msg);
     } finally {
       setIsConnecting(false);
     }

@@ -43,9 +43,9 @@ export default function ActivityFeed({ events, error }: ActivityFeedProps) {
             <div key={event.id} className="p-4 rounded-2xl bg-gray-50 border border-transparent hover:border-black/5 hover:bg-white transition-all group">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  {event.type === 'swap' && <ArrowDownUp size={14} className="text-green-500" />}
-                  {event.type === 'liquidity' && <Droplets size={14} className="text-[#1E40AF]" />}
-                  {event.type === 'event' && <Zap size={14} className="text-purple-500" />}
+                  {event.type === 'swap' && <ArrowDownUp size={14} className="text-amber-500" />}
+                  {event.type === 'liquidity' && <Droplets size={14} className="text-orange-500" />}
+                  {event.type === 'event' && <Sun size={14} className="text-yellow-500" />}
                   <span className="font-bold text-sm text-[#0F172A]">{event.desc}</span>
                 </div>
                 <span className="text-[10px] font-bold text-gray-400">{getTimeAgo(event.timestamp)}</span>
@@ -55,7 +55,7 @@ export default function ActivityFeed({ events, error }: ActivityFeedProps) {
                   href={`https://stellar.expert/explorer/testnet/tx/${event.txHash}`} 
                   target="_blank" 
                   rel="noreferrer" 
-                  className="flex items-center gap-1 text-[10px] font-bold text-[#1E40AF]/60 hover:text-[#1E40AF]"
+                  className="flex items-center gap-1 text-[10px] font-bold text-amber-600/60 hover:text-amber-600"
                 >
                   {event.txHash.slice(0, 12)}... <ExternalLink size={10} />
                 </a>

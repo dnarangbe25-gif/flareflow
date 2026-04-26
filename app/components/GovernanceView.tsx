@@ -56,7 +56,7 @@ export default function GovernanceView() {
             <Vote className="text-blue-600" />
             Governance
           </h2>
-          <p className="text-sm text-gray-400 mt-1">Vote on proposals and shape the future of SorobanFlow.</p>
+          <p className="text-sm text-gray-400 mt-1">Vote on proposals and shape the future of Flare Flow.</p>
         </div>
         <button 
           onClick={() => setShowModal(true)}
