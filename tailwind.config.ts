@@ -11,27 +11,29 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        blue: {
-          400: "var(--blue)",
-          500: "var(--blue)",
-          600: "#2563eb",
+        flare: {
+          50: "#fffbeb",
+          100: "#fef3c7",
+          400: "var(--flare)",
+          500: "var(--flare)",
+          600: "#ea580c",
         },
-        purple: {
-          400: "var(--purple)",
-          500: "var(--purple)",
-          900: "#4c1d95",
+        solar: {
+          400: "#fbbf24",
+          500: "#f59e0b",
+          900: "#78350f",
         },
         green: {
-          400: "var(--green)",
-          500: "var(--green)",
+          400: "#34d399",
+          500: "#10b981",
         },
         red: {
-          400: "var(--red)",
-          500: "var(--red)",
+          400: "#f87171",
+          500: "#ef4444",
         },
         yellow: {
-          400: "var(--yellow)",
-          500: "var(--yellow)",
+          400: "#fbbf24",
+          500: "#f59e0b",
         },
         gray: {
           300: "#cbd5e1",
@@ -41,9 +43,9 @@ const config: Config = {
         card: "var(--card-bg)",
         cardBorder: "var(--card-border)",
         stellar: {
-          blue: "#3e1bdb",
-          purple: "#7c3aed",
-          dark: "#0f172a",
+          amber: "#f59e0b",
+          gold: "#fbbf24",
+          dark: "#020617",
         }
       },
       backgroundImage: {

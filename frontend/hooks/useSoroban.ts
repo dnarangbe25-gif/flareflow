@@ -24,13 +24,13 @@ export const useSoroban = () => {
       const account = await horizon.loadAccount(address);
       console.log("useSoroban: Account loaded, sequence:", account.sequenceNumber());
       
-      const lqidAsset = new StellarSdk.Asset("LQID", "GCDAND5QSCVFFEDUCK62VEZASVPYOUATCMJ4EXAUVEOUPILOJDDEFUTZ");
+      const flreAsset = new StellarSdk.Asset("FLRE", "GCGUQ2F6LKRCD6PUDJKTVNGNEFVGJJPLBM7L64I5YFM7SBQGGXNXMVUM");
       
       console.log("useSoroban: Building transaction...");
       const op = StellarSdk.Operation.pathPaymentStrictSend({
         sendAsset: StellarSdk.Asset.native(),
         sendAmount: amount,
-        destAsset: lqidAsset,
+        destAsset: flreAsset,
         destMin: "0.0000001",
         destination: address,
         path: [],
@@ -76,7 +76,20 @@ export const useSoroban = () => {
       return { success: true, txHash: submission.hash };
     } catch (err: any) {
       console.error("useSoroban: ERROR", err);
-      const msg = err.message || "Swap failed";
+      let msg = err.message || "Swap failed";
+      
+      // Extract detailed horizon error if available
+      if (err.response?.data?.extras?.result_codes) {
+        const codes = err.response.data.extras.result_codes;
+        console.error("useSoroban: Horizon Result Codes:", codes);
+        const ops = codes.operations || [];
+        if (ops.includes("op_no_path")) {
+          msg = "No liquidity path found. You need to add liquidity for FLRE on the network first.";
+        } else {
+          msg += ` (${codes.transaction}: ${ops.join(', ')})`;
+        }
+      }
+
       setError(msg);
       alert("SWAP ERROR: " + msg);
       throw err;
@@ -89,9 +102,13 @@ export const useSoroban = () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log(`Adding ${amount} liquidity for ${address}`);
-      await new Promise(r => setTimeout(r, 2000));
-      return { success: true, txHash: "0x" + Math.random().toString(16).slice(2) };
+      console.log(`useSoroban: addLiquidity triggered for ${amount} XLM`);
+      // For now, since setting up a real AMM pool requires both assets, 
+      // we'll guide the user to provide initial FLRE supply first.
+      const msg = "To add liquidity, you must first have both XLM and FLRE. Use the issuer account to mint FLRE to your wallet first.";
+      setError(msg);
+      alert(msg);
+      return { success: false };
     } catch (err: any) {
       setError(err.message || "Failed to add liquidity");
       throw err;
@@ -100,5 +117,93 @@ export const useSoroban = () => {
     }
   };
 
-  return { swap, addLiquidity, isLoading, error };
+  const setupTrustline = async (address: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const networkPassphrase = StellarSdk.Networks.TESTNET;
+      const horizonUrl = "https://horizon-testnet.stellar.org";
+      const horizon = new StellarSdk.Horizon.Server(horizonUrl);
+      const account = await horizon.loadAccount(address);
+      
+      const flreAsset = new StellarSdk.Asset("FLRE", "GCGUQ2F6LKRCD6PUDJKTVNGNEFVGJJPLBM7L64I5YFM7SBQGGXNXMVUM");
+      
+      const op = StellarSdk.Operation.changeTrust({ asset: flreAsset });
+      const tx = new StellarSdk.TransactionBuilder(account, {
+        fee: StellarSdk.BASE_FEE,
+        networkPassphrase,
+      })
+        .addOperation(op)
+        .setTimeout(StellarSdk.TimeoutInfinite)
+        .build();
+
+      const xdr = tx.toXDR();
+      const result = await signTransaction(xdr, { networkPassphrase });
+      const signedXdr = typeof result === 'string' ? result : (result as any)?.signedTxXdr;
+      
+      if (!signedXdr) throw new Error("Signature cancelled");
+      
+      await horizon.submitTransaction(StellarSdk.TransactionBuilder.fromXDR(signedXdr, networkPassphrase) as any);
+      return { success: true };
+    } catch (err: any) {
+      console.error("useSoroban: Trustline setup failed", err);
+      setError(err.message || "Failed to add trustline");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const seedLiquidity = async (address: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const networkPassphrase = StellarSdk.Networks.TESTNET;
+      const horizonUrl = "https://horizon-testnet.stellar.org";
+      const horizon = new StellarSdk.Horizon.Server(horizonUrl);
+      const account = await horizon.loadAccount(address);
+      
+      const flreAsset = new StellarSdk.Asset("FLRE", "GCGUQ2F6LKRCD6PUDJKTVNGNEFVGJJPLBM7L64I5YFM7SBQGGXNXMVUM");
+      
+      console.log("useSoroban: Seeding liquidity for FLRE...");
+      
+      // Operation 1: Manage Sell Offer (Issuer sells FLRE for XLM)
+      // This establishes the initial price and liquidity
+      const op = StellarSdk.Operation.manageSellOffer({
+        selling: flreAsset,
+        buying: StellarSdk.Asset.native(),
+        amount: "5000", // Initial supply
+        price: "0.25",  // 1 FLRE = 4 XLM
+      });
+
+      const tx = new StellarSdk.TransactionBuilder(account, {
+        fee: StellarSdk.BASE_FEE,
+        networkPassphrase,
+      })
+        .addOperation(op)
+        .setTimeout(StellarSdk.TimeoutInfinite)
+        .build();
+
+      const xdr = tx.toXDR();
+      const result = await signTransaction(xdr, { networkPassphrase });
+      const signedXdr = typeof result === 'string' ? result : (result as any)?.signedTxXdr;
+      
+      if (!signedXdr) throw new Error("Signature cancelled");
+      
+      await horizon.submitTransaction(StellarSdk.TransactionBuilder.fromXDR(signedXdr, networkPassphrase) as any);
+      return { success: true };
+    } catch (err: any) {
+      console.error("useSoroban: Seeding failed", err);
+      let msg = err.message || "Failed to seed liquidity";
+      if (err.response?.data?.extras?.result_codes) {
+        msg += ` (${err.response.data.extras.result_codes.operations.join(', ')})`;
+      }
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { swap, addLiquidity, setupTrustline, seedLiquidity, isLoading, error };
 };

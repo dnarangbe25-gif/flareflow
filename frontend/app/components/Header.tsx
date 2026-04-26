@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu, X, Wallet, LogOut } from "lucide-react";
 import { useWalletContext } from "@/context/WalletContext";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
+  const pathname = usePathname();
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { address, connect, disconnect, isConnecting } = useWalletContext();
@@ -29,41 +32,49 @@ export default function Header() {
       <div className="max-w-[1400px] mx-auto flex justify-between items-center">
         
         {/* Left Side: Logo */}
-        <div className="flex items-center">
-          <h1 className="text-xl font-bold tracking-tight text-black">
-            SOROBANFLOW V4
+        <Link href="/" className="flex items-center">
+          <h1 className="text-xl font-black tracking-tighter text-black flex items-center gap-2">
+            FLARE <span className="text-amber-500">FLOW</span>
           </h1>
-        </div>
+        </Link>
 
         {/* Middle: Navigation */}
         <div className="hidden md:flex items-center space-x-6">
-          {["Swap", "Liquidity", "Governance"].map((link) => (
-            <a 
-              key={link} 
-              href={`#${link.toLowerCase()}`} 
-              className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
+          {[
+            { name: "Swap", href: "/dashboard#swap" },
+            { name: "Liquidity", href: "/dashboard#liquidity" },
+            { name: "Governance", href: "/dashboard#governance" }
+          ].map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="text-sm font-medium text-gray-500 hover:text-amber-600 transition-colors"
             >
-              {link}
-            </a>
+              {link.name}
+            </Link>
           ))}
         </div>
 
         {/* Right Side: Actions */}
         <div className="flex items-center space-x-2">
-          {/* Wallet Button */}
-          <button 
-            onClick={address ? undefined : handleConnect}
-            disabled={isConnecting}
-            className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-[10px] sm:text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer relative z-50"
-          >
-            <Wallet size={12} />
-            <span className="hidden sm:inline">
-              {isConnecting ? "..." : address ? `${address.slice(0, 4)}...${address.slice(-4)}` : "Connect"}
-            </span>
-            <span className="sm:hidden">
-              {isConnecting ? "..." : address ? `${address.slice(0, 4)}...` : "Connect"}
-            </span>
-          </button>
+          {/* Wallet / Launch Button */}
+          {pathname === "/" ? (
+            <Link href="/dashboard" className="px-4 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition-all shadow-sm">
+              LAUNCH APP
+            </Link>
+          ) : (
+            <button 
+              onClick={address ? undefined : handleConnect}
+              disabled={isConnecting}
+              className="flex items-center gap-2 px-3 py-1.5 border border-amber-200 rounded-lg text-[10px] sm:text-xs font-bold text-amber-700 bg-amber-50/50 hover:bg-amber-50 transition-all cursor-pointer relative z-50"
+            >
+              <Wallet size={12} />
+              <span className="hidden sm:inline">
+                {isConnecting ? "..." : address ? `${address.slice(0, 4)}...${address.slice(-4)}` : "Connect"}
+              </span>
+              <span className="sm:inline hidden ml-1">WALLET</span>
+            </button>
+          )}
 
           {/* Theme Toggle */}
           <button 
@@ -97,15 +108,19 @@ export default function Header() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden pt-4 pb-2 flex flex-col space-y-3 border-t border-gray-50 mt-4">
-          {["Swap", "Liquidity", "Governance"].map((link) => (
-            <a 
-              key={link} 
-              href={`#${link.toLowerCase()}`} 
-              className="text-sm font-medium text-gray-500 hover:text-black"
+          {[
+            { name: "Swap", href: "/dashboard#swap" },
+            { name: "Liquidity", href: "/dashboard#liquidity" },
+            { name: "Governance", href: "/dashboard#governance" }
+          ].map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="text-sm font-medium text-gray-500 hover:text-amber-600 transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              {link}
-            </a>
+              {link.name}
+            </Link>
           ))}
           {/* Mobile Utility Actions */}
           <div className="flex items-center justify-between pt-2 border-t border-gray-50">

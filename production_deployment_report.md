@@ -1,6 +1,6 @@
-# 🚀 Production Deployment Report
+# ☀️ Flare Flow Deployment Report
 
-**Project**: SorobanFlow Engine  
+**Project**: Flare Flow Engine  
 **Network**: Stellar Testnet  
 **Date**: 2026-04-23  
 

@@ -11,7 +11,7 @@ export default function GovernanceView() {
   const [voted, setVoted] = useState(false);
   const [proposals, setProposals] = useState([
     { id: 1, title: "Add USDC/XLM Pool", status: "Active", votes: "1.2M", time: "2d left", desc: "This proposal aims to add a USDC/XLM liquidity pool to the DEX to improve stablecoin accessibility." },
-    { id: 2, title: "Increase LQID Rewards", status: "Passed", votes: "4.5M", time: "Closed", desc: "Increase the weekly distribution of LQID tokens to liquidity providers by 15%." },
+    { id: 2, title: "Increase FLRE Rewards", status: "Passed", votes: "4.5M", time: "Closed", desc: "Increase the weekly distribution of FLRE tokens to liquidity providers by 15%." },
   ]);
 
   const handleCreate = (e: React.FormEvent) => {
@@ -56,7 +56,7 @@ export default function GovernanceView() {
             <Vote className="text-blue-600" />
             Governance
           </h2>
-          <p className="text-sm text-gray-400 mt-1">Vote on proposals and shape the future of SorobanFlow.</p>
+          <p className="text-sm text-gray-400 mt-1">Vote on proposals and shape the future of Flare Flow.</p>
         </div>
         <button 
           onClick={() => setShowModal(true)}

@@ -2,21 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import * as StellarSdk from "@stellar/stellar-sdk";
-import { useStellar } from "../hooks/useStellar";
-import { useEventsContext } from "../context/EventsContext";
-import { useSoroban } from "../hooks/useSoroban";
+import { useStellar } from "../../hooks/useStellar";
+import { useEventsContext } from "../../context/EventsContext";
+import { useSoroban } from "../../hooks/useSoroban";
 
 // Modular Components
-import BalanceCard from "./components/BalanceCard";
-import SwapInterface from "./components/SwapInterface";
-import ActivityFeed from "./components/ActivityFeed";
-import GovernanceView from "./components/GovernanceView";
+import BalanceCard from "../components/BalanceCard";
+import SwapInterface from "../components/SwapInterface";
+import ActivityFeed from "../components/ActivityFeed";
+import GovernanceView from "../components/GovernanceView";
 
 export default function Home() {
   // Logic & State
   const { address, connect, isConnecting } = useStellar();
   const { events, addEvent } = useEventsContext();
-  const { swap, addLiquidity, isLoading: isProcessing } = useSoroban();
+  const { swap, addLiquidity, setupTrustline, seedLiquidity, isLoading: isProcessing } = useSoroban();
+  const isIssuer = address === tokenId;
+  const [hasTrustline, setHasTrustline] = useState(true);
   
   const [activeTab, setActiveTab] = useState<"swap" | "liquidity" | "governance">("swap");
   const [amount, setAmount] = useState("");
@@ -32,7 +34,14 @@ export default function Home() {
       const horizon = new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org");
       const account = await horizon.loadAccount(address);
       const xlmVal = account.balances.find(b => b.asset_type === "native")?.balance || "0.00";
-      const flreVal = account.balances.find(b => 'asset_code' in b && b.asset_code === "FLRE")?.balance || "0.00";
+      const flreBalanceObj = account.balances.find(b => 
+        'asset_code' in b && 
+        b.asset_code === "FLRE" && 
+        b.asset_issuer === tokenId
+      );
+      const flreVal = flreBalanceObj?.balance || "0.00";
+      
+      setHasTrustline(!!flreBalanceObj);
       setBalances({ 
         xlm: parseFloat(xlmVal).toLocaleString(undefined, { minimumFractionDigits: 2 }), 
         flre: parseFloat(flreVal).toLocaleString(undefined, { minimumFractionDigits: 2 })
@@ -80,10 +89,10 @@ export default function Home() {
         if (data._embedded?.records?.[0]) {
           setEstimatedReceive(parseFloat(data._embedded.records[0].destination_amount).toFixed(3));
         } else {
-          setEstimatedReceive((numAmount * 0.99).toFixed(2));
+          setEstimatedReceive("No Path");
         }
       } catch (e) {
-        setEstimatedReceive((numAmount * 0.99).toFixed(2));
+        setEstimatedReceive("Error");
       }
     };
     const timer = setTimeout(fetchEstimate, 300);
@@ -121,6 +130,27 @@ export default function Home() {
     setSwapDirection(prev => prev === "xlm-to-flre" ? "flre-to-xlm" : "xlm-to-flre");
   };
 
+  const handleSetupTrustline = async () => {
+    if (!address) return;
+    try {
+      await setupTrustline(address);
+      fetchBalances();
+    } catch (e) {
+      console.error("Trustline setup failed", e);
+    }
+  };
+
+  const handleSeedLiquidity = async () => {
+    if (!address) return;
+    try {
+      await seedLiquidity(address);
+      alert("Success! Market seeded with 5,000 FLRE.");
+      fetchBalances();
+    } catch (e) {
+      console.error("Seeding failed", e);
+    }
+  };
+
   return (
     <div className="max-w-[1400px] mx-auto px-6 pt-12 pb-24 animate-page">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -152,6 +182,38 @@ export default function Home() {
               swapDirection={swapDirection}
               onToggleDirection={toggleDirection}
             />
+          )}
+          
+          {!hasTrustline && address && (
+            <div className="mt-6 p-6 bg-amber-50 border border-amber-100 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-bold text-amber-900 font-solar">Token Activation Required</h3>
+                <p className="text-sm text-amber-700">Your wallet needs to trust the new FLRE asset before you can swap.</p>
+              </div>
+              <button 
+                onClick={handleSetupTrustline}
+                disabled={isProcessing}
+                className="whitespace-nowrap px-6 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-all shadow-md active:scale-95 disabled:opacity-50"
+              >
+                {isProcessing ? "ACTIVATING..." : "ACTIVATE FLRE"}
+              </button>
+            </div>
+          )}
+
+          {isIssuer && (
+            <div className="mt-6 p-6 bg-blue-50 border border-blue-100 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-bold text-blue-900 font-solar">Migration Admin Tool</h3>
+                <p className="text-sm text-blue-700">As the issuer, you can seed the initial market liquidity for the FLRE asset.</p>
+              </div>
+              <button 
+                onClick={handleSeedLiquidity}
+                disabled={isProcessing}
+                className="whitespace-nowrap px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50"
+              >
+                {isProcessing ? "SEEDING..." : "SEED MARKET LIQUIDITY"}
+              </button>
+            </div>
           )}
         </div>
 

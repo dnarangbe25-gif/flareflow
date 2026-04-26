@@ -14,8 +14,8 @@ interface SwapInterfaceProps {
   onConnect: () => void;
   address?: string | null;
   xlmBalance: string;
-  lqidBalance: string;
-  swapDirection: "xlm-to-lqid" | "lqid-to-xlm";
+  flreBalance: string;
+  swapDirection: "xlm-to-flre" | "flre-to-xlm";
   onToggleDirection: () => void;
 }
 
@@ -30,15 +30,15 @@ export default function SwapInterface({
   onConnect,
   address,
   xlmBalance,
-  lqidBalance,
+  flreBalance,
   swapDirection,
   onToggleDirection
 }: SwapInterfaceProps) {
   
-  const isXlmSource = swapDirection === "xlm-to-lqid";
-  const sourceBalance = isXlmSource ? xlmBalance : lqidBalance;
-  const sourceSymbol = isXlmSource ? "XLM" : "LQID";
-  const destSymbol = isXlmSource ? "LQID" : "XLM";
+  const isXlmSource = swapDirection === "xlm-to-flre";
+  const sourceBalance = isXlmSource ? xlmBalance : flreBalance;
+  const sourceSymbol = isXlmSource ? "XLM" : "FLRE";
+  const destSymbol = isXlmSource ? "FLRE" : "XLM";
 
   const handleMax = () => {
     const max = parseFloat(sourceBalance.replace(/,/g, ''));

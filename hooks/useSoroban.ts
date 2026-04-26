@@ -24,13 +24,13 @@ export const useSoroban = () => {
       const account = await horizon.loadAccount(address);
       console.log("useSoroban: Account loaded, sequence:", account.sequenceNumber());
       
-      const lqidAsset = new StellarSdk.Asset("LQID", "GCDAND5QSCVFFEDUCK62VEZASVPYOUATCMJ4EXAUVEOUPILOJDDEFUTZ");
+      const flreAsset = new StellarSdk.Asset("FLRE", "GCGUQ2F6LKRCD6PUDJKTVNGNEFVGJJPLBM7L64I5YFM7SBQGGXNXMVUM");
       
       console.log("useSoroban: Building transaction...");
       const op = StellarSdk.Operation.pathPaymentStrictSend({
         sendAsset: StellarSdk.Asset.native(),
         sendAmount: amount,
-        destAsset: lqidAsset,
+        destAsset: flreAsset,
         destMin: "0.0000001",
         destination: address,
         path: [],

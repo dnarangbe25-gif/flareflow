@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
 interface BalanceCardProps {
-  type: "xlm" | "lqid";
+  type: "xlm" | "flre";
   value: string;
   address?: string;
   isLoading?: boolean;
