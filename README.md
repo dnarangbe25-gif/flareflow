@@ -11,7 +11,7 @@ A production-ready Stellar Soroban ecosystem featuring an Advanced Token system,
 ## 🖼️ User Interface
 
 ### Desktop Dashboard
-![Desktop Dashboard](./dekstop.png)
+![Desktop Dashboard](./desktop.png)
 
 ### Mobile View (320px)
 ![Mobile Dashboard](./mobile.png)
