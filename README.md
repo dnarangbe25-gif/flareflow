@@ -38,8 +38,8 @@ A high-performance Stellar Soroban ecosystem featuring the Golden Solar AMM, Adv
 
 ### 2. Clone and Install
 ```bash
-git clone https://github.com/user/antigravity-soroban.git
-cd antigravity-soroban
+git clone https://github.com/dnarangbe25-gif/flareflow.git
+cd flareflow
 npm install # Installs frontend dependencies
 ```
 
