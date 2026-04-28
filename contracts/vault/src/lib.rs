@@ -62,3 +62,6 @@ impl PoolContract {
         Ok(client.balance_of(&env.current_contract_address()))
     }
 }
+
+#[cfg(test)]
+mod test;

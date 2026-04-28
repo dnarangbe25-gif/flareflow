@@ -57,3 +57,6 @@ impl TokenContract {
         env.storage().instance().get(&symbol_short!("supply")).unwrap_or(0)
     }
 }
+
+#[cfg(test)]
+mod test;

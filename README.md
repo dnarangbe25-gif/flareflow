@@ -12,6 +12,9 @@ A high-performance Stellar Soroban ecosystem featuring the Golden Solar AMM, Adv
 
 ## 🖼️ User Interface
 
+### App Demo
+![App Demo](./demo.gif)
+
 ### Desktop Dashboard
 ![Desktop Dashboard](./desktop.png)
 
@@ -105,6 +108,20 @@ This project utilizes the following deployed smart contracts on the Stellar Test
 
 - **Advanced Token Contract**: `CBJOKWREK5D3N2L3X7W4U6L2MQQ5P5A3T2N6G7B4H5J6K7LVMQNOPQRA`
 - **Liquidity Pool Contract**: `CCPF4E7W2L3M5N6P7QVRWSXTUVWYZZABACADAEAFAGAHAIAJAKALAMAN`
+---
+
+## 🧪 Smart Contract Testing
+
+The project includes comprehensive unit tests for the Soroban smart contracts. To run the tests locally:
+
+```bash
+make test
+# OR
+cargo test
+```
+
+This will run the tests defined in the `token` and `vault` contracts.
+
 ---
 
 ## 🧪 CI/CD & Secrets
